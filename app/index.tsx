@@ -10,6 +10,9 @@ export default function Page() {
 
   const handleAlert = () => {
     setError("Помилка");
+    setTimeout(()=>{
+      setError("");
+    },3000)
   };
   return (
     <View style={styles.container}>

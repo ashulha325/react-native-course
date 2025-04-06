@@ -1,43 +1,54 @@
 import { ErrorNotificationProps } from "@/shared/ErrorNotification/ErrorNotification.props";
-import { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Dimensions, Animated } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, Text, Dimensions, Animated } from "react-native";
 import { Colors } from "@/shared/tokens";
 
 const ErrorNotification = ({ error, setError }: ErrorNotificationProps) => {
-  const [isShown, setIsShown] = useState<boolean>(false);
+  const [isShown, setIsShown] = useState(false);
 
-  const animatedValue = new Animated.Value(-100);
+  const translateY = useRef(new Animated.Value(-200)).current;
 
-  const onEnter = () => {
-    Animated.timing(animatedValue, {
+  const showNotification = () => {
+    Animated.timing(translateY, {
       toValue: 0,
-      duration: 200,
+      duration: 300,
       useNativeDriver: true,
     }).start();
+  };
+
+  const hideNotification = () => {
+    Animated.timing(translateY, {
+      toValue: -200,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setIsShown(false);
+    });
   };
 
   useEffect(() => {
     if (!error) return;
 
     setIsShown(true);
+    showNotification();
+
     const timerId = setTimeout(() => {
-      setIsShown(false);
-      setError("");
+      hideNotification();
     }, 3000);
 
-    return () => {
-      clearTimeout(timerId);
-    };
+    return () => clearTimeout(timerId);
   }, [error]);
 
-  if (!isShown) {
-    return <></>;
-  }
+  if (!isShown) return null;
 
   return (
     <Animated.View
-      style={{ ...styles.wrapper, transform: [{ translateY: animatedValue }] }}
-      onLayout={onEnter}
+      style={[
+        styles.wrapper,
+        {
+          transform: [{ translateY }],
+        },
+      ]}
     >
       <Text style={styles.text}>{error}</Text>
     </Animated.View>
@@ -52,6 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.red,
     padding: 15,
     width: Dimensions.get("window").width,
+    zIndex: 1000,
   },
   text: {
     color: Colors.white,
